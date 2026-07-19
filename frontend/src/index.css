@@ -1,0 +1,91 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    font-family: "Inter", sans-serif;
+    background-color: #0f172a;
+    background-image: radial-gradient(at 20% 20%, rgba(59, 130, 246, 0.08) 0px, transparent 50%),
+      radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.08) 0px, transparent 50%);
+    background-attachment: fixed;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Space Grotesk", sans-serif;
+  }
+
+  ::selection {
+    background-color: rgba(59, 130, 246, 0.35);
+  }
+
+  *:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-surface/70 backdrop-blur-xl border border-white/10 rounded-2xl shadow-card;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-2.5
+      font-medium text-white transition-all hover:bg-primary-hover hover:shadow-glow
+      active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/5 px-5 py-2.5
+      font-medium text-white transition-all hover:bg-white/10 active:scale-[0.98];
+  }
+
+  .btn-accent {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-5 py-2.5
+      font-medium text-white transition-all hover:bg-accent-hover hover:shadow-glow-accent active:scale-[0.98];
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-white
+      placeholder:text-muted focus:border-primary/60 focus:bg-white/[0.07] focus:outline-none transition-colors;
+  }
+
+  .sidebar-link {
+    @apply flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-medium text-muted
+      transition-colors hover:bg-white/5 hover:text-white;
+  }
+
+  .sidebar-link-active {
+    @apply bg-primary/15 text-primary hover:bg-primary/20 hover:text-primary;
+  }
+}
+
+/* thin scrollbars matching the dark theme */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #475569;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

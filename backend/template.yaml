@@ -1,0 +1,230 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Secure Serverless Cloud Storage - API Gateway + Lambda (Node.js 22) + S3.
+  No EC2, no containers, no traditional backend server.
+
+Parameters:
+  Stage:
+    Type: String
+    Default: prod
+    AllowedValues: [dev, staging, prod]
+  AllowedOrigin:
+    Type: String
+    Default: "*"
+    Description: CORS origin allowed to call the API (set to your Vercel domain in production).
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Timeout: 15
+    MemorySize: 256
+    Architectures: [arm64]
+    Environment:
+      Variables:
+        BUCKET_NAME: !Ref FileStorageBucket
+        ALLOWED_ORIGIN: !Ref AllowedOrigin
+    Tracing: Active
+
+Resources:
+  # ---------------------------------------------------------------------
+  # STORAGE
+  # ---------------------------------------------------------------------
+  FileStorageBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub "serverless-file-share-${AWS::AccountId}-${Stage}"
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      CorsConfiguration:
+        CorsRules:
+          - AllowedHeaders: ["*"]
+            AllowedMethods: [GET, PUT, POST, DELETE, HEAD]
+            AllowedOrigins: ["*"]
+            MaxAge: 3000
+      LifecycleConfiguration:
+        Rules:
+          - Id: AbortIncompleteMultipartUploads
+            Status: Enabled
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 1
+      VersioningConfiguration:
+        Status: Enabled
+
+  # ---------------------------------------------------------------------
+  # API GATEWAY
+  # ---------------------------------------------------------------------
+  FileShareApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      Name: !Sub "file-share-api-${Stage}"
+      StageName: !Ref Stage
+      Cors:
+        AllowMethods: "'GET,POST,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+        AllowOrigin: !Sub "'${AllowedOrigin}'"
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${AllowedOrigin}'"
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${AllowedOrigin}'"
+
+  # ---------------------------------------------------------------------
+  # LAMBDA FUNCTIONS (least-privilege: each gets only the S3 actions it needs)
+  # ---------------------------------------------------------------------
+  UploadFileFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints: [index.js]
+        Minify: true
+        Target: es2022
+        Format: cjs
+    Properties:
+      CodeUri: lambda/uploadFile/
+      Handler: index.handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref FileStorageBucket
+      Events:
+        UploadApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FileShareApi
+            Path: /upload
+            Method: POST
+
+  ListFilesFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints: [index.js]
+        Minify: true
+        Target: es2022
+        Format: cjs
+    Properties:
+      CodeUri: lambda/listFiles/
+      Handler: index.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref FileStorageBucket
+      Events:
+        ListApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FileShareApi
+            Path: /files
+            Method: GET
+
+  DownloadFileFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints: [index.js]
+        Minify: true
+        Target: es2022
+        Format: cjs
+    Properties:
+      CodeUri: lambda/downloadFile/
+      Handler: index.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref FileStorageBucket
+      Events:
+        DownloadApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FileShareApi
+            Path: /download/{key}
+            Method: GET
+
+  DeleteFileFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints: [index.js]
+        Minify: true
+        Target: es2022
+        Format: cjs
+    Properties:
+      CodeUri: lambda/deleteFile/
+      Handler: index.handler
+      Policies:
+        - S3CrudPolicy:
+            BucketName: !Ref FileStorageBucket
+      Events:
+        DeleteApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FileShareApi
+            Path: /files/{key}
+            Method: DELETE
+
+  SearchFilesFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints: [index.js]
+        Minify: true
+        Target: es2022
+        Format: cjs
+    Properties:
+      CodeUri: lambda/searchFiles/
+      Handler: index.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref FileStorageBucket
+      Events:
+        SearchApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FileShareApi
+            Path: /search
+            Method: GET
+
+  GetStatisticsFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        EntryPoints: [index.js]
+        Minify: true
+        Target: es2022
+        Format: cjs
+    Properties:
+      CodeUri: lambda/getStatistics/
+      Handler: index.handler
+      Policies:
+        - S3ReadPolicy:
+            BucketName: !Ref FileStorageBucket
+      Events:
+        StatsApi:
+          Type: Api
+          Properties:
+            RestApiId: !Ref FileShareApi
+            Path: /stats
+            Method: GET
+
+Outputs:
+  ApiEndpoint:
+    Description: Base URL of the deployed API Gateway stage.
+    Value: !Sub "https://${FileShareApi}.execute-api.${AWS::Region}.amazonaws.com/${Stage}"
+  BucketName:
+    Description: Name of the S3 bucket used for file storage.
+    Value: !Ref FileStorageBucket
