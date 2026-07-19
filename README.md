@@ -220,11 +220,11 @@ All responses are JSON with CORS headers (`Access-Control-Allow-Origin`) applied
 
 ### Landing Page
 
-![Landing Page](assets/Screenshot 2026-07-19 091857.png)
+![Landing Page](assets\landingpage.png)
 
 ### Dashboard
 
-![Dashboard](assets/Screenshot 2026-07-19 091959.png)
+![Dashboard](assets\dashboard.png)
 
 ### Upload Page
 
@@ -236,7 +236,7 @@ All responses are JSON with CORS headers (`Access-Control-Allow-Origin`) applied
 
 ### Settings
 
-![Settings](assets/Screenshot 2026-07-19 092052.png)
+![Settings](assets\settings.png)
 ---
 
 ## 12. Future Improvements
