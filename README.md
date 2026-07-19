@@ -1,4 +1,4 @@
-# CloudDrop — Secure Serverless Cloud Storage
+# CloudVault — Secure Serverless Cloud Storage
 
 A production-style, Dropbox-like file sharing platform built entirely on **true serverless AWS architecture**: API Gateway + Lambda + S3, with zero EC2 instances and zero traditional backend servers. Built as a portfolio piece for Cloud / AWS / DevOps engineering roles.
 
@@ -8,7 +8,7 @@ A production-style, Dropbox-like file sharing platform built entirely on **true 
 
 ## 1. Project Overview
 
-CloudDrop lets users upload, browse, search, preview, download, and delete files through a polished dark-mode SaaS dashboard. Every operation is handled by a dedicated AWS Lambda function invoked through API Gateway, with Amazon S3 as the sole storage layer.
+CloudVault lets users upload, browse, search, preview, download, and delete files through a polished dark-mode SaaS dashboard. Every operation is handled by a dedicated AWS Lambda function invoked through API Gateway, with Amazon S3 as the sole storage layer.
 
 **Live capabilities**
 - Drag-and-drop multi-file upload with per-file progress, cancel, and retry
@@ -152,11 +152,11 @@ cd backend
 sam build
 sam deploy --guided
 ```
-On first run, SAM will prompt for a stack name, region, and the `AllowedOrigin` parameter (set this to your Vercel domain, e.g. `https://clouddrop.vercel.app`) and save your answers to `samconfig.toml`.
+On first run, SAM will prompt for a stack name, region, and the `AllowedOrigin` parameter (set this to your Vercel domain, e.g. `https://cloudvault.vercel.app`) and save your answers to `samconfig.toml`.
 
 A `samconfig.toml` is already included with sensible defaults (region `us-east-1`, `CAPABILITY_IAM`, `AllowedOrigin="*"`). If you want to deploy non-interactively once you're past the first run, either edit `samconfig.toml` directly or override on the command line:
 ```bash
-sam deploy --parameter-overrides Stage="prod" AllowedOrigin="https://clouddrop.vercel.app"
+sam deploy --parameter-overrides Stage="prod" AllowedOrigin="https://cloudvault.vercel.app"
 ```
 Note the `ApiEndpoint` and `BucketName` values in the stack outputs — you'll need them for the frontend's `.env`.
 
@@ -218,13 +218,25 @@ All responses are JSON with CORS headers (`Access-Control-Allow-Origin`) applied
 
 ## 11. Screenshots
 
-_Add screenshots here after deployment:_
-- `docs/screenshot-landing.png`
-- `docs/screenshot-dashboard.png`
-- `docs/screenshot-upload.png`
-- `docs/screenshot-files.png`
-- `docs/screenshot-statistics.png`
+### Landing Page
 
+![Landing Page](assets\Screenshot 2026-07-19 091857.png)
+
+### Dashboard
+
+![Dashboard](assets\Screenshot 2026-07-19 091959.png)
+
+### Upload Page
+
+![Upload Page](assets/upload-page.png)
+
+### My Files
+
+![My Files](assets/my-files.png)
+
+### Settings
+
+![Settings](assets\Screenshot 2026-07-19 092052.png)
 ---
 
 ## 12. Future Improvements
